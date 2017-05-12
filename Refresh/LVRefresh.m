@@ -34,15 +34,9 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
 
 
 @implementation LVRefreshOrgan
-- (void)stretch:(CGFloat)value{
-    
-}
-- (void)refreshing{
-    NSLog(@"刷新中");
-}
-- (void)disappearing{
-    NSLog(@"请求完成");
-}
+- (void)stretch:(CGFloat)value{}
+- (void)refreshing{}
+- (void)disappearing{}
 @end
 @implementation LVRefreshEye
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -58,11 +52,40 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
 - (CALayer *)eyeBall {
     if (!_eyeBall) {
         _eyeBall = [CALayer layer];
-        _eyeBall.frame =CGRectMake(0, 0, 1, 1);
+        _eyeBall.frame =CGRectMake(0, 0, 2, 2);
+        _eyeBall.cornerRadius = 1;
+        _eyeBall.masksToBounds = YES;
         _eyeBall.backgroundColor = kLVRefreshStyleColor.CGColor;
         _eyeBall.position = CGPointMake(ceilf(CGRectGetWidth(self.frame)/2.f), ceilf(CGRectGetHeight(self.frame)/2.f));
     }
     return _eyeBall;
+}
+- (void)stretch:(CGFloat)value {
+    if (value<=2) {
+        value = 2;
+    }else {
+        value =  (MIN(value, kLVRefreshHeight) / kLVRefreshHeight) * CGRectGetWidth(self.frame);
+    }
+    CGRect bouds = self.bounds;
+    bouds.size = CGSizeMake(value, value);
+    _eyeBall.bounds = bouds;
+    _eyeBall.cornerRadius = value/2.f;
+}
+- (void)refreshing {
+    [self disappearing];
+    UIBezierPath * rotation = [UIBezierPath bezierPathWithArcCenter:_eyeBall.position radius:CGRectGetWidth(self.frame)/2.f-2 startAngle:0 endAngle:2*M_PI clockwise:YES];
+    CAKeyframeAnimation * ani = [CAKeyframeAnimation animationWithKeyPath:@"position"];
+    ani.path = rotation.CGPath;
+    ani.duration = 2;
+    ani.repeatCount = MAXFLOAT;
+    [_eyeBall addAnimation:ani forKey:@"rortaion"];
+}
+- (void)disappearing {
+    [_eyeBall removeAllAnimations];
+    CGRect bouds = self.bounds;
+    bouds.size = CGSizeMake(2, 2);
+    _eyeBall.bounds = bouds;
+    _eyeBall.cornerRadius = 1;
 }
 @end
 @implementation LVRefreshMouth
@@ -92,6 +115,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
         frame.origin.y = CGRectGetHeight(self.frame)-kLVRefreshEyeBot-kLVRefreshEyeWidth;
         frame.origin.x = kLVRefreshEyeLeft;
         _leftEye = [[LVRefreshEye alloc] initWithFrame:frame];
+        _leftEye.originFrame = frame;
     }
     return _leftEye;
 }
@@ -101,6 +125,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
         frame.origin.y = CGRectGetHeight(self.frame)-kLVRefreshEyeBot-kLVRefreshEyeWidth;
         frame.origin.x = CGRectGetWidth(self.frame)-kLVRefreshEyeWidth-kLVRefreshEyeLeft;
         _rightEye = [[LVRefreshEye alloc] initWithFrame:frame];
+        _rightEye.originFrame = frame;
     }
     return _rightEye;
 }
@@ -111,6 +136,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
         CGPoint center = _mouth.center;
         center.x = ceilf(CGRectGetWidth(self.frame)/2.f);
         _mouth.center = center;
+        _mouth.originFrame = frame;
     }
     return _mouth;
 }
@@ -127,6 +153,14 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     [_mouth stretch:value];
     [_jaw stretch:value];
     //TODO:
+    
+    if (value == 0) {
+        self.frame = self.originFrame;
+    }else {
+        CGRect frame = self.originFrame;
+        frame.origin.y -= value;
+        self.frame = frame;
+    }
 }
 - (void)refreshing {
     [_leftEye refreshing];
@@ -134,6 +168,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     [_mouth refreshing];
     [_jaw refreshing];
     //TODO:
+    
+    self.frame = self.originFrame;
 }
 -(void)disappearing {
     [_leftEye disappearing];
@@ -141,6 +177,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     [_mouth disappearing];
     [_jaw disappearing];
     //TODO:
+    
+    self.frame = self.frame;
 }
 @end
 
@@ -175,6 +213,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     if (self = [super initWithFrame:frame]) {
         _face = [[LVRefreshFace alloc] initWithFrame:CGRectMake(0, 0, kLVRefreshFaceWidth, kLVRefreshFaceWidth)];
         _face.center = CGPointMake(ceilf(CGRectGetWidth(frame)/2.f), ceilf(CGRectGetHeight(frame)/2.f));
+        _face.originFrame = _face.frame;
         [self addSubview:_face];
         
         _face.backgroundColor = [UIColor whiteColor];

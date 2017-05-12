@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface LVRefreshOrgan : UIView
-@property (nonatomic, assign) CGRect originBounds;
+@property (nonatomic, assign) CGRect originFrame;
 - (void)stretch:(CGFloat)value;
 - (void)refreshing;
 - (void)disappearing;
