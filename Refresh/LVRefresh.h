@@ -20,6 +20,7 @@
 @end
 
 @interface LVRefreshMouth : LVRefreshOrgan ///< 嘴巴
+@property (nonatomic, assign) CGPoint originCenter;
 @end
 
 @interface LVRefreshJaw : LVRefreshOrgan ///< 下巴

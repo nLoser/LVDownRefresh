@@ -11,6 +11,7 @@
 static const CGFloat kLVRefreshHeight = 64;
 static const CGFloat kLVRefreshFaceWidth = 40;
 static const CGFloat kLVRefreshEyeWidth = 12;
+static const CGFloat kLVRefreshEyeBallMinWidth = 3.4;
 static const CGFloat kLVRefreshMouthNormalWidth = 8;
 static const CGFloat kLVRefreshMouthNormalHeigh = 5;
 
@@ -52,8 +53,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
 - (CALayer *)eyeBall {
     if (!_eyeBall) {
         _eyeBall = [CALayer layer];
-        _eyeBall.frame =CGRectMake(0, 0, 2, 2);
-        _eyeBall.cornerRadius = 1;
+        _eyeBall.frame =CGRectMake(0, 0, kLVRefreshEyeBallMinWidth, kLVRefreshEyeBallMinWidth);
+        _eyeBall.cornerRadius = kLVRefreshEyeBallMinWidth/2.f;
         _eyeBall.masksToBounds = YES;
         _eyeBall.backgroundColor = kLVRefreshStyleColor.CGColor;
         _eyeBall.position = CGPointMake(ceilf(CGRectGetWidth(self.frame)/2.f), ceilf(CGRectGetHeight(self.frame)/2.f));
@@ -61,8 +62,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     return _eyeBall;
 }
 - (void)stretch:(CGFloat)value {
-    if (value<=2) {
-        value = 2;
+    if (value<=kLVRefreshEyeBallMinWidth) {
+        value = kLVRefreshEyeBallMinWidth;
     }else {
         value =  (MIN(value, kLVRefreshHeight) / kLVRefreshHeight) * CGRectGetWidth(self.frame);
     }
@@ -73,41 +74,85 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
 }
 - (void)refreshing {
     [self disappearing];
-    UIBezierPath * rotation = [UIBezierPath bezierPathWithArcCenter:_eyeBall.position radius:CGRectGetWidth(self.frame)/2.f-2 startAngle:0 endAngle:2*M_PI clockwise:YES];
+    UIBezierPath * rotation = [UIBezierPath bezierPathWithArcCenter:_eyeBall.position radius:CGRectGetWidth(self.frame)/2.f-4 startAngle:0 endAngle:2*M_PI clockwise:YES];
     CAKeyframeAnimation * ani = [CAKeyframeAnimation animationWithKeyPath:@"position"];
     ani.path = rotation.CGPath;
-    ani.duration = 2;
+    ani.duration = 1;
     ani.repeatCount = MAXFLOAT;
     [_eyeBall addAnimation:ani forKey:@"rortaion"];
 }
 - (void)disappearing {
     [_eyeBall removeAllAnimations];
     CGRect bouds = self.bounds;
-    bouds.size = CGSizeMake(2, 2);
+    bouds.size = CGSizeMake(kLVRefreshEyeBallMinWidth, kLVRefreshEyeBallMinWidth);
     _eyeBall.bounds = bouds;
-    _eyeBall.cornerRadius = 1;
+    _eyeBall.cornerRadius = kLVRefreshEyeBallMinWidth/2.f;
 }
 @end
 @implementation LVRefreshMouth
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
-        self.backgroundColor = kLVRefreshStyleColor;
+        self.backgroundColor = kLVRefreshMouthColor;
+        
+        self.layer.borderColor = kLVRefreshStyleColor.CGColor;
+        self.layer.borderWidth = ceilf(kLVRefreshLineW/2.f);
+        self.layer.cornerRadius = CGRectGetHeight(frame)/2.f;
+        self.layer.masksToBounds = YES;
     }
     return self;
 }
+- (void)stretch:(CGFloat)value {
+    
+    CGRect mathFrame = self.originFrame;
+    mathFrame.size.height += value;
+    self.frame = mathFrame;
+    
+}
+- (void)refreshing {
+    CGRect frame = self.originFrame;
+    frame.size.width = kLVRefreshMouthNormalHeigh;
+    self.frame = frame;
+    self.center = self.originCenter;
+}
+- (void)disappearing {
+    self.frame = self.originFrame;
+    self.center = self.originCenter;
+}
 @end
 @implementation LVRefreshJaw
-
+- (void)stretch:(CGFloat)value {
+    CGRect mathFrame = self.originFrame;
+    mathFrame.size.height += value;
+    self.frame = mathFrame;
+}
+- (void)refreshing {
+    self.frame = self.originFrame;
+}
+- (void)disappearing {
+    self.frame = self.originFrame;
+}
 @end
 @implementation LVRefreshFace
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
+        [self addSubview:self.jaw];
         [self addSubview:self.leftEye];
         [self addSubview:self.rightEye];
         [self addSubview:self.mouth];
-        [self addSubview:self.jaw];
     }
     return self;
+}
+- (LVRefreshJaw *)jaw {
+    if (!_jaw) {
+        _jaw = [[LVRefreshJaw alloc] initWithFrame:self.bounds];
+        _jaw.originFrame = self.bounds;
+        _jaw.layer.cornerRadius = 8;
+        _jaw.layer.borderWidth  = 1;
+        _jaw.layer.borderColor  = [UIColor blackColor].CGColor;
+        _jaw.layer.masksToBounds = YES;
+        _jaw.backgroundColor = [UIColor whiteColor];
+    }
+    return _jaw;
 }
 -(LVRefreshEye *)leftEye {
     if (!_leftEye) {
@@ -131,20 +176,16 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
 }
 - (LVRefreshMouth *)mouth {
     if (!_mouth) {
-        CGRect frame = CGRectMake(0, CGRectGetHeight(self.frame)-kLVRefreshMouthBot-kLVRefreshMouthNormalHeigh, kLVRefreshMouthNormalWidth, kLVRefreshMouthNormalHeigh);
+        CGFloat mathX = (CGRectGetWidth(self.frame)-kLVRefreshMouthNormalWidth)/2.f;
+        CGRect frame = CGRectMake(mathX, CGRectGetHeight(self.frame)-kLVRefreshMouthBot-kLVRefreshMouthNormalHeigh, kLVRefreshMouthNormalWidth, kLVRefreshMouthNormalHeigh);
         _mouth = [[LVRefreshMouth alloc] initWithFrame:frame];
         CGPoint center = _mouth.center;
         center.x = ceilf(CGRectGetWidth(self.frame)/2.f);
         _mouth.center = center;
         _mouth.originFrame = frame;
+        _mouth.originCenter = center;
     }
     return _mouth;
-}
-- (LVRefreshJaw *)jaw {
-    if (!_jaw) {
-        
-    }
-    return _jaw;
 }
 #pragma mark - Override
 - (void)stretch:(CGFloat)value {
@@ -216,8 +257,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
         _face.originFrame = _face.frame;
         [self addSubview:_face];
         
-        _face.backgroundColor = [UIColor whiteColor];
-        self.backgroundColor = [UIColor blackColor];
+        //_face.backgroundColor = [UIColor whiteColor];
+        self.backgroundColor = [UIColor purpleColor];
     }
     return self;
 }
