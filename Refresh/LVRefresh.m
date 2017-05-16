@@ -12,8 +12,8 @@ static const CGFloat kLVRefreshHeight = 64;
 static const CGFloat kLVRefreshFaceWidth = 40;
 static const CGFloat kLVRefreshEyeWidth = 12;
 static const CGFloat kLVRefreshEyeBallMinWidth = 3.4;
-static const CGFloat kLVRefreshMouthNormalWidth = 8;
-static const CGFloat kLVRefreshMouthNormalHeigh = 5;
+static const CGFloat kLVRefreshMouthNormalWidth = 10;
+static const CGFloat kLVRefreshMouthNormalHeigh = 7;
 
 static const CGFloat kLVRefreshLineW = 1;
 
@@ -65,7 +65,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     if (value<=kLVRefreshEyeBallMinWidth) {
         value = kLVRefreshEyeBallMinWidth;
     }else {
-        value =  (MIN(value, kLVRefreshHeight) / kLVRefreshHeight) * CGRectGetWidth(self.frame);
+        value =  (value / kLVRefreshHeight) * CGRectGetWidth(self.frame);
+        value = MAX(value, kLVRefreshEyeBallMinWidth);
     }
     CGRect bouds = self.bounds;
     bouds.size = CGSizeMake(value, value);
@@ -96,7 +97,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
         
         self.layer.borderColor = kLVRefreshStyleColor.CGColor;
         self.layer.borderWidth = ceilf(kLVRefreshLineW/2.f);
-        self.layer.cornerRadius = CGRectGetHeight(frame)/2.f;
+        self.layer.cornerRadius = ceilf(kLVRefreshMouthNormalHeigh/2.f);
         self.layer.masksToBounds = YES;
     }
     return self;
@@ -107,16 +108,20 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     mathFrame.size.height += value;
     self.frame = mathFrame;
     
+    value = MIN(ceilf(kLVRefreshMouthNormalWidth/2.f), value+ceilf(kLVRefreshMouthNormalHeigh/2.f));
+    self.layer.cornerRadius = value;
 }
 - (void)refreshing {
     CGRect frame = self.originFrame;
     frame.size.width = kLVRefreshMouthNormalHeigh;
     self.frame = frame;
     self.center = self.originCenter;
+    self.layer.cornerRadius = ceilf(kLVRefreshMouthNormalHeigh/2.f);
 }
 - (void)disappearing {
     self.frame = self.originFrame;
     self.center = self.originCenter;
+    self.layer.cornerRadius = ceilf(kLVRefreshMouthNormalHeigh/2.f);
 }
 @end
 @implementation LVRefreshJaw
@@ -146,7 +151,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     if (!_jaw) {
         _jaw = [[LVRefreshJaw alloc] initWithFrame:self.bounds];
         _jaw.originFrame = self.bounds;
-        _jaw.layer.cornerRadius = 8;
+        _jaw.layer.cornerRadius = 10;
         _jaw.layer.borderWidth  = 1;
         _jaw.layer.borderColor  = [UIColor blackColor].CGColor;
         _jaw.layer.masksToBounds = YES;
