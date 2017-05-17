@@ -304,12 +304,18 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
 }
 
 - (void)scrollViewDidScroll {
+    if (self.realContentOffsetY >= 0) {
+        return;
+    }
     if (self.state == LVRefreshControlStateIdle) {
         [self stretchWithOverflow:self.overflow];
     }
 }
 
 - (void)scrollViewDidEndDragging {
+    if (self.realContentOffsetY >= 0) {
+        return;
+    }
     if (self.state == LVRefreshControlStateIdle) {
         if(self.animationProgress == 1) self.state = LVRefreshControlStateRefreshing;
         if (self.state == LVRefreshControlStateRefreshing) {
