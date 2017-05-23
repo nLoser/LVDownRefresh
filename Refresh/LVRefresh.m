@@ -80,6 +80,8 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     ani.path = rotation.CGPath;
     ani.duration = 1;
     ani.repeatCount = MAXFLOAT;
+    ani.removedOnCompletion = NO;
+    ani.fillMode = kCAFillModeForwards;
     [_eyeBall addAnimation:ani forKey:@"rortaion"];
 }
 - (void)disappearing {
@@ -263,7 +265,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
         [self addSubview:_face];
         
         //_face.backgroundColor = [UIColor whiteColor];
-        self.backgroundColor = [UIColor purpleColor];
+        //        self.backgroundColor = [UIColor purpleColor];
     }
     return self;
 }
@@ -285,7 +287,7 @@ typedef NS_ENUM(NSUInteger, LVRefreshControlState) {
     return y<0?fabs(y):0;
 }
 
-#pragma mark - Private 
+#pragma mark - Private
 
 - (void)stretchWithOverflow:(CGFloat)overflow {
     [self.face stretch:overflow];
